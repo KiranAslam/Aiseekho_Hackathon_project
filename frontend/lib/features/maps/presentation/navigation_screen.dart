@@ -1,16 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:async';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_chrome.dart';
 import '../../healthcare_request/presentation/healthcare_flow_controller.dart';
 
-class NavigationScreen extends ConsumerWidget {
+class NavigationScreen extends ConsumerStatefulWidget {
   const NavigationScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NavigationScreen> createState() => _NavigationScreenState();
+}
+
+class _NavigationScreenState extends ConsumerState<NavigationScreen> {
+  bool _mapReady = false;
+  bool _showFallback = false;
+  Timer? _fallbackTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fallbackTimer = Timer(const Duration(seconds: 6), () {
+      if (mounted && !_mapReady) {
+        setState(() => _showFallback = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _fallbackTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final analysis = ref.watch(healthcareFlowProvider).analysis;
     if (analysis == null) {
       return const AppScaffold(
@@ -50,41 +76,99 @@ class NavigationScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(26),
               child: SizedBox(
                 height: 380,
-                child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: hospitalPosition,
-                    zoom: hasLiveCoordinates ? 14 : 11,
-                  ),
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapToolbarEnabled: true,
-                  trafficEnabled: true,
-                  markers: {
-                    Marker(
-                      markerId: const MarkerId('origin'),
-                      position: originPosition,
-                      infoWindow: const InfoWindow(
-                        title: 'Current search area',
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Container(
+                        color: const Color(0xFFE9F5F3),
+                        child: GoogleMap(
+                          onMapCreated: (_) {
+                            if (!mounted) return;
+                            setState(() {
+                              _mapReady = true;
+                              _showFallback = false;
+                            });
+                          },
+                          initialCameraPosition: CameraPosition(
+                            target: hospitalPosition,
+                            zoom: hasLiveCoordinates ? 14 : 11,
+                          ),
+                          myLocationButtonEnabled: false,
+                          zoomControlsEnabled: false,
+                          mapToolbarEnabled: true,
+                          trafficEnabled: true,
+                          markers: {
+                            Marker(
+                              markerId: const MarkerId('origin'),
+                              position: originPosition,
+                              infoWindow: const InfoWindow(
+                                title: 'Current search area',
+                              ),
+                            ),
+                            Marker(
+                              markerId: const MarkerId('hospital'),
+                              position: hospitalPosition,
+                              infoWindow: InfoWindow(
+                                title: analysis.selectedHospital,
+                                snippet: '${analysis.eta} | ${analysis.distance}',
+                              ),
+                            ),
+                          },
+                          polylines: {
+                            Polyline(
+                              polylineId: const PolylineId('optimized_route'),
+                              points: routePoints,
+                              color: AppColors.teal,
+                              width: 5,
+                              geodesic: true,
+                            ),
+                          },
+                        ),
                       ),
                     ),
-                    Marker(
-                      markerId: const MarkerId('hospital'),
-                      position: hospitalPosition,
-                      infoWindow: InfoWindow(
-                        title: analysis.selectedHospital,
-                        snippet: '${analysis.eta} | ${analysis.distance}',
+                    if (_showFallback || !_mapReady)
+                      Positioned.fill(
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withValues(alpha: 0.94),
+                                Colors.white.withValues(alpha: 0.84),
+                              ],
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.map_rounded,
+                                size: 54,
+                                color: AppColors.teal,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                _mapReady
+                                    ? 'Map loaded successfully.'
+                                    : 'Map is taking time to initialize.',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                hasLiveCoordinates
+                                    ? 'Route data is available for ${analysis.selectedHospital}. If the map plugin cannot render, the route summary below is still active.'
+                                    : 'The backend returned fallback coordinates. Route summary is still available below.',
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  },
-                  polylines: {
-                    Polyline(
-                      polylineId: const PolylineId('optimized_route'),
-                      points: routePoints,
-                      color: AppColors.teal,
-                      width: 5,
-                      geodesic: true,
-                    ),
-                  },
+                  ],
                 ),
               ),
             ),
