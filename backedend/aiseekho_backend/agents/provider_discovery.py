@@ -65,6 +65,10 @@ def run(intent_output: dict, city: str) -> dict:
             "hospital_rating": hospital.get("rating", hospital.get("hospital_rating", 0.0)),
             "congestion_level": hospital.get("congestion_level", "UNKNOWN"),
             "emergency_ready": hospital.get("emergency_ready", True),
+            "hospital_lat": hospital.get("hospital_lat"),
+            "hospital_lng": hospital.get("hospital_lng"),
+            "route_polyline": hospital.get("route_polyline"),
+            "traffic_condition": hospital.get("traffic_condition"),
             "score": _compute_priority_score(hospital, urgency),
             "reason": "Emergency-ready hospital available." if hospital.get("emergency_ready", True) else "Available for non-emergency cases.",
         }

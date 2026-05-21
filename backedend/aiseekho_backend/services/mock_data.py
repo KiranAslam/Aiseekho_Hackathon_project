@@ -18,6 +18,8 @@ DEFAULT_HOSPITALS = [
         "emergency_ready": True,
         "traffic_delay_mins": 12,
         "patient_capacity": "High",
+        "hospital_lat": 24.8515,
+        "hospital_lng": 67.0099,
     },
     {
         "hospital_id": "KHI002",
@@ -31,6 +33,8 @@ DEFAULT_HOSPITALS = [
         "emergency_ready": True,
         "traffic_delay_mins": 15,
         "patient_capacity": "Medium",
+        "hospital_lat": 24.8437,
+        "hospital_lng": 67.0265,
     },
     {
         "hospital_id": "KHI003",
@@ -44,6 +48,8 @@ DEFAULT_HOSPITALS = [
         "emergency_ready": True,
         "traffic_delay_mins": 10,
         "patient_capacity": "Medium",
+        "hospital_lat": 24.7726,
+        "hospital_lng": 67.0181,
     },
     {
         "hospital_id": "KHI004",
@@ -55,6 +61,8 @@ DEFAULT_HOSPITALS = [
         "wait_time_mins": 10,
         "congestion_level": "LOW",
         "emergency_ready": False,
+        "hospital_lat": 24.7500,
+        "hospital_lng": 67.0200,
         "traffic_delay_mins": 8,
         "patient_capacity": "Low",
     },
@@ -120,6 +128,8 @@ def load_city_hospitals(city: str) -> List[Dict]:
                 "emergency_ready": True,
                 "traffic_delay_mins": 14,
                 "patient_capacity": "High",
+                "hospital_lat": 31.5497,
+                "hospital_lng": 74.3436,
             },
             {
                 "hospital_id": "LHE002",
@@ -133,6 +143,8 @@ def load_city_hospitals(city: str) -> List[Dict]:
                 "emergency_ready": True,
                 "traffic_delay_mins": 12,
                 "patient_capacity": "Medium",
+                "hospital_lat": 31.5497,
+                "hospital_lng": 74.2633,
             },
             {
                 "hospital_id": "LHE003",
@@ -146,6 +158,8 @@ def load_city_hospitals(city: str) -> List[Dict]:
                 "emergency_ready": False,
                 "traffic_delay_mins": 9,
                 "patient_capacity": "Low",
+                "hospital_lat": 31.5308,
+                "hospital_lng": 74.2164,
             },
         ]
     return DEFAULT_HOSPITALS

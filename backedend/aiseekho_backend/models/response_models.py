@@ -20,6 +20,14 @@ class AnalyzeResponse(BaseModel):
     emergency_note: Optional[str] = None
     ops_insights: Optional[List[str]] = None
     follow_up: Optional[str] = None
+    hospital_lat: Optional[float] = None
+    hospital_lng: Optional[float] = None
+    origin_lat: Optional[float] = None
+    origin_lng: Optional[float] = None
+    route_polyline: Optional[str] = None
+    congestion_level: Optional[str] = None
+    traffic_condition: Optional[str] = None
+    vicinity: Optional[str] = None
 
 class BookingResponse(BaseModel):
     booking_status: str

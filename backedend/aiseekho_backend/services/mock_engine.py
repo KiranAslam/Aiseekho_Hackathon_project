@@ -70,5 +70,13 @@ def run_pipeline(message: str, location: str, preferred_time: str = None) -> dic
         "emergency_note": emergency_output.get("message", ""),
         "ops_insights": ops_output.get("insights", []),
         "follow_up": followup_output.get("follow_up", ""),
-        "trace_id": trace_record.get("timestamp")
+        "trace_id": trace_record.get("timestamp"),
+        "hospital_lat": selected.get("hospital_lat", 24.8607),
+        "hospital_lng": selected.get("hospital_lng", 67.0011),
+        "origin_lat": 24.8515,
+        "origin_lng": 67.0099,
+        "route_polyline": selected.get("route_polyline", "encoded_route_path"),
+        "congestion_level": selected.get("congestion_level", "moderate"),
+        "traffic_condition": selected.get("traffic_condition", "normal"),
+        "vicinity": selected.get("vicinity", location)
     }

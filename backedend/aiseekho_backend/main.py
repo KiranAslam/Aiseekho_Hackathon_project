@@ -20,6 +20,7 @@ app.add_middleware(
 )
 
 from routers import analyze, booking, analytics, traces
+from config import settings
 
 app.include_router(analyze.router)
 app.include_router(booking.router)
@@ -28,4 +29,4 @@ app.include_router(traces.router)
 
 @app.get("/")
 def root():
-    return {"status": "AISeekho Backend Running", "mode": "mock"}
+    return {"status": "AISeekho Backend Running", "mode": settings.APP_MODE}

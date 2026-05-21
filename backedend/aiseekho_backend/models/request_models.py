@@ -13,3 +13,5 @@ class BookingRequest(BaseModel):
     urgency: str
     patient_name: str = "Anonymous"
     requested_time: Optional[str] = None
+    hospital_name: Optional[str] = None
+    eta: Optional[str] = None
