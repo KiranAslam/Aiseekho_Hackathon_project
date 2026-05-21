@@ -16,9 +16,7 @@ class RequestScreen extends ConsumerStatefulWidget {
 }
 
 class _RequestScreenState extends ConsumerState<RequestScreen> {
-  final _messageController = TextEditingController(
-    text: 'Meri mother ko chest pain hai aur nearby hospitals crowded hain.',
-  );
+  final _messageController = TextEditingController();
   final _locationController = TextEditingController(
     text: AppConfig.defaultCity,
   );
