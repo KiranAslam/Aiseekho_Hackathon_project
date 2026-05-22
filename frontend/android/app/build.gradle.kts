@@ -14,8 +14,12 @@ val localProperties = Properties().apply {
 }
 
 val googleMapsApiKey: String =
-    localProperties.getProperty("GOOGLE_MAPS_API_KEY")
+    // Prefer the Android-specific key variable, fall back to legacy name
+    localProperties.getProperty("GOOGLE_MAPS_ANDROID_KEY")
+        ?: localProperties.getProperty("GOOGLE_MAPS_API_KEY")
+        ?: providers.gradleProperty("GOOGLE_MAPS_ANDROID_KEY").orNull
         ?: providers.gradleProperty("GOOGLE_MAPS_API_KEY").orNull
+        ?: providers.environmentVariable("GOOGLE_MAPS_ANDROID_KEY").orNull
         ?: providers.environmentVariable("GOOGLE_MAPS_API_KEY").orNull
         ?: ""
 
