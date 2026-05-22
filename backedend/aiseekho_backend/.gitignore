@@ -20,9 +20,8 @@ lib/
 lib64/
 MANIFEST
 
-# ─── Virtual Environments ─────────────────────────────────────────
-venv/
-.venv/
+# ─── Virtual Environments ─────────────────────────────────────────venv/
+../../myenv/
 env/
 ENV/
 env.bak/
