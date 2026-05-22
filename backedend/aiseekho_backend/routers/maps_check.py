@@ -12,7 +12,8 @@ def maps_check(address: str = "Karachi"):
     Returns status and result count; useful to debug API_KEY issues like
     REQUEST_DENIED, API_KEY_INVALID, or ZERO_RESULTS.
     """
-    key = settings.GOOGLE_MAPS_API_KEY
+    # Prefer server key when available; fall back to legacy key
+    key = settings.GOOGLE_MAPS_SERVER_KEY or settings.GOOGLE_MAPS_API_KEY
     if not key:
         return {"ok": False, "error": "GOOGLE_MAPS_API_KEY not configured"}
 
