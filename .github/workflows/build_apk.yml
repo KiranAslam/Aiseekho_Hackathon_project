@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOOGLE_MAPS_ANDROID_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_KEY }}
+      GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_KEY }}
       GOOGLE_MAPS_SERVER_KEY: ${{ secrets.GOOGLE_MAPS_SERVER_KEY }}
 
     steps:
@@ -47,7 +48,7 @@ jobs:
 
       - name: Verify Maps key is present
         run: |
-          if [ -z "$GOOGLE_MAPS_ANDROID_KEY" ]; then
+          if [ -z "$GOOGLE_MAPS_ANDROID_KEY$GOOGLE_MAPS_API_KEY" ]; then
             echo "Missing Google Maps API key. Set GOOGLE_MAPS_ANDROID_KEY in GitHub secrets."
             exit 1
           fi
