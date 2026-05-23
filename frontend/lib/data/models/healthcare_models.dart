@@ -43,6 +43,7 @@ class AnalyzeResponse {
     this.emergencyNote,
     this.opsInsights = const [],
     this.followUp,
+    this.rankedHospitals = const [],
   });
 
   final String urgency;
