@@ -20,6 +20,10 @@ lib/
 lib64/
 MANIFEST
 
+# Keep the Flutter app source tracked in GitHub Actions
+!frontend/lib/
+!frontend/lib/**
+
 # ─── Virtual Environments ─────────────────────────────────────────
 venv/
 myenv/
