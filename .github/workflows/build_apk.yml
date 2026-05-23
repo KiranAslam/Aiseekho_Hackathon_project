@@ -14,8 +14,19 @@ jobs:
       GOOGLE_MAPS_SERVER_KEY: ${{ secrets.GOOGLE_MAPS_SERVER_KEY }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (full)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+          submodules: true
+
+      - name: Show git tracked files (debug)
+        run: |
+          echo "Git status:" 
+          git status --porcelain
+          echo "Files under frontend (git ls-files):"
+          git ls-files frontend | sed -n '1,200p' || true
 
       - name: Set up Java 17
         uses: actions/setup-java@v3
@@ -37,6 +48,17 @@ jobs:
       - name: Flutter doctor (diagnostics)
         working-directory: frontend
         run: flutter doctor -v || true
+
+      - name: List frontend files (debug)
+        working-directory: frontend
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Listing frontend root:" 
+          ls -la
+          echo "Listing lib directory:" 
+          ls -la lib || true
+          echo "Show tree:" 
+          find . -maxdepth 3 -type f -print || true
       - name: Build release APK (verbose)
         working-directory: frontend
         run: flutter build apk --release -v
