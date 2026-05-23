@@ -79,4 +79,7 @@ def run_pipeline(message: str, location: str, preferred_time: str = None) -> dic
         "congestion_level": selected.get("congestion_level", "moderate"),
         "traffic_condition": selected.get("traffic_condition", "normal"),
         "vicinity": selected.get("vicinity", location)
+        ,
+        # include full ranked hospitals so the client can display alternatives
+        "ranked_hospitals": decision_output.get("ranked_hospitals", hospital_output.get("candidates", [])),
     }

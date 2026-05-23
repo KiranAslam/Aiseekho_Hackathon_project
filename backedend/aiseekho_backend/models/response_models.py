@@ -28,6 +28,8 @@ class AnalyzeResponse(BaseModel):
     congestion_level: Optional[str] = None
     traffic_condition: Optional[str] = None
     vicinity: Optional[str] = None
+    # Optional detailed candidate list / ranked hospitals
+    ranked_hospitals: Optional[List[dict]] = None
 
 class BookingResponse(BaseModel):
     booking_status: str

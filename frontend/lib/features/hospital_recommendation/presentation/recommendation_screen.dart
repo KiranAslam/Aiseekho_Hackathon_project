@@ -134,6 +134,31 @@ class RecommendationScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 18),
+          if (analysis.rankHospitalsNullSafe.isNotEmpty)
+            GlassPanel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Also evaluated',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  ...analysis.rankHospitalsNullSafe.map((h) {
+                    final name = h['hospital_name'] ?? h['hospitalName'] ?? 'Unknown';
+                    final eta = h['eta'] ?? h['eta'];
+                    final dist = h['distance'] ?? h['distance'];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(name),
+                      subtitle: Text('${eta ?? ''} • ${dist ?? ''}'),
+                      leading: const Icon(Icons.local_hospital_rounded),
+                    );
+                  }).take(6).toList(),
+                ],
+              ),
+            ),
+          const SizedBox(height: 18),
           Row(
             children: [
               Expanded(

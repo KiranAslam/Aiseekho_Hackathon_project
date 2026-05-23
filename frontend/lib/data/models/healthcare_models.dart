@@ -68,6 +68,7 @@ class AnalyzeResponse {
   final String? emergencyNote;
   final List<String> opsInsights;
   final String? followUp;
+  final List<dynamic> rankedHospitals;
 
   factory AnalyzeResponse.fromJson(Map<String, dynamic> json) {
     return AnalyzeResponse(
@@ -100,8 +101,11 @@ class AnalyzeResponse {
           .map((item) => item.toString())
           .toList(),
       followUp: json['follow_up']?.toString(),
+      rankedHospitals: (json['ranked_hospitals'] as List<dynamic>?) ?? const [],
     );
   }
+
+  List<dynamic> get rankHospitalsNullSafe => rankedHospitals ?? const [];
 }
 
 class BookingRequest {

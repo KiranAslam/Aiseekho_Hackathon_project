@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     DEFAULT_CITY: str = "Karachi"
 
     GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "models/gemini-2.5-pro"
     # Backwards compatible single key (kept for legacy .env)
     GOOGLE_MAPS_API_KEY: str = ""
     # Preferred for Android client usage (package+SHA1 restricted)
