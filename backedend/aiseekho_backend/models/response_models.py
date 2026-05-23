@@ -9,6 +9,7 @@ class AnalyzeResponse(BaseModel):
     request_type: str
     requested_time: Optional[str] = None
     selected_hospital: str
+    location: Optional[str] = None
     hospital_id: str
     distance: str
     eta: str

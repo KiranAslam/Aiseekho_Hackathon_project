@@ -22,6 +22,7 @@ class AnalyzeResponse {
     required this.symptom,
     required this.requestType,
     required this.selectedHospital,
+    this.location,
     required this.hospitalId,
     required this.distance,
     required this.eta,
@@ -47,6 +48,7 @@ class AnalyzeResponse {
   final String urgency;
   final String symptom;
   final String requestType;
+  final String? location;
   final String? requestedTime;
   final String selectedHospital;
   final String hospitalId;
@@ -75,6 +77,7 @@ class AnalyzeResponse {
       urgency: json['urgency']?.toString() ?? 'LOW',
       symptom: json['symptom']?.toString() ?? 'General medical issue',
       requestType: json['request_type']?.toString() ?? 'Routine',
+      location: json['location']?.toString(),
       requestedTime: json['requested_time']?.toString(),
       selectedHospital:
           json['selected_hospital']?.toString() ?? 'No hospital found',

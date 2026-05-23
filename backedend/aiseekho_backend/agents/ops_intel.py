@@ -26,6 +26,24 @@ def _calculate_congestion(hospital: dict) -> str:
         return "MEDIUM"
 
 
+def _stringify_insight(item) -> str:
+    if isinstance(item, str):
+        return item.strip()
+    if isinstance(item, dict):
+        recommendation = item.get("recommendation") or item.get("title") or item.get("hospital_name")
+        reason = item.get("reason") or item.get("explanation") or item.get("message")
+        if recommendation and reason:
+            return f"{recommendation}: {reason}"
+        if recommendation:
+            return str(recommendation)
+        if reason:
+            return str(reason)
+        return json.dumps(item, ensure_ascii=False)
+    if isinstance(item, (list, tuple)):
+        return "; ".join(_stringify_insight(part) for part in item if _stringify_insight(part))
+    return str(item)
+
+
 def run(hospitals: list) -> dict:
     if not hospitals:
         return {
@@ -57,7 +75,13 @@ def run(hospitals: list) -> dict:
                 "Return only JSON.\n\nHospitals:\n" + "\n".join(summary)
             )
             resp = analyze_with_gemini(prompt)
-            insights = json.loads(resp)
+            raw_insights = json.loads(resp)
+            if isinstance(raw_insights, dict):
+                raw_insights = [raw_insights]
+            if not isinstance(raw_insights, list):
+                raw_insights = [raw_insights]
+            insights = [_stringify_insight(item) for item in raw_insights]
+            insights = [item for item in insights if item]
             top = insights[0] if insights else hospitals[0].get("hospital_name")
             return {
                 "agent": "OpsIntelAgent",

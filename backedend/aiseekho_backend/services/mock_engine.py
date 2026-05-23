@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from agents.intent import run as intent_run
 from agents.provider_discovery import run as provider_run
 from agents.decision import run as decision_run
@@ -34,7 +34,7 @@ def run_pipeline(message: str, location: str, preferred_time: str = None) -> dic
         f"[OpsIntelAgent] {ops_output.get('reason', 'Operational insight generated.')}",
     ]
 
-    trace_id = datetime.utcnow().isoformat() + "Z"
+    trace_id = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     trace_record = {
         "timestamp": trace_id,
         "trace_id": trace_id,
@@ -55,6 +55,7 @@ def run_pipeline(message: str, location: str, preferred_time: str = None) -> dic
         pass
 
     return {
+        "location": intent_output.get("location", location),
         "urgency": intent_output["urgency"],
         "symptom": intent_output["symptom"],
         "request_type": intent_output["request_type"],
@@ -78,8 +79,7 @@ def run_pipeline(message: str, location: str, preferred_time: str = None) -> dic
         "route_polyline": selected.get("route_polyline", "encoded_route_path"),
         "congestion_level": selected.get("congestion_level", "moderate"),
         "traffic_condition": selected.get("traffic_condition", "normal"),
-        "vicinity": selected.get("vicinity", location)
-        ,
+        "vicinity": selected.get("vicinity", intent_output.get("location", location)),
         # include full ranked hospitals so the client can display alternatives
         "ranked_hospitals": decision_output.get("ranked_hospitals", hospital_output.get("candidates", [])),
     }

@@ -92,6 +92,78 @@ DEFAULT_ANALYTICS = [
     },
 ]
 
+CITY_CENTER_LOOKUP = {
+    "karachi": (24.8607, 67.0011),
+    "lahore": (31.5204, 74.3587),
+    "islamabad": (33.6844, 73.0479),
+    "rawalpindi": (33.5651, 73.0169),
+    "faisalabad": (31.4504, 73.1350),
+    "multan": (30.1575, 71.5249),
+    "peshawar": (34.0151, 71.5249),
+    "quetta": (30.1798, 66.9750),
+    "hyderabad": (25.3960, 68.3578),
+    "sialkot": (32.4945, 74.5229),
+    "gujranwala": (32.1877, 74.1945),
+}
+
+
+def _normalize_city(city: str) -> str:
+    return (city or "").strip().lower()
+
+
+def _list_city_files() -> List[str]:
+    if not os.path.isdir(DATA_DIR):
+        return []
+    return sorted(
+        os.path.join(DATA_DIR, name)
+        for name in os.listdir(DATA_DIR)
+        if name.startswith("hospitals_") and name.endswith(".json")
+    )
+
+
+def _city_center(city: str) -> tuple[float, float]:
+    city_key = _normalize_city(city)
+    return CITY_CENTER_LOOKUP.get(city_key, CITY_CENTER_LOOKUP["karachi"])
+
+
+def _generate_city_hospitals(city: str) -> List[Dict]:
+    lat, lng = _city_center(city)
+    city_name = city.strip() or "Requested city"
+    templates = [
+        ("Central Emergency Hospital", ["Emergency", "Cardiology"], 4.8, 2.0, 16, "HIGH", True, 10, "High"),
+        ("City General Hospital", ["General", "Internal Medicine"], 4.5, 3.6, 22, "MEDIUM", True, 12, "High"),
+        ("Specialty Care Center", ["Pediatrics", "Diagnostics"], 4.4, 4.8, 18, "MEDIUM", True, 11, "Medium"),
+        ("Neighborhood Health Clinic", ["Primary Care", "Outpatient"], 4.2, 6.1, 12, "LOW", False, 8, "Low"),
+        ("24/7 Urgent Care Unit", ["Emergency", "Trauma"], 4.6, 5.3, 14, "HIGH", True, 9, "Medium"),
+    ]
+    hospitals: List[Dict] = []
+    for idx, (name, specialties, rating, distance, wait, congestion, emergency_ready, delay, capacity) in enumerate(templates, start=1):
+        hospitals.append({
+            "hospital_id": f"{_normalize_city(city)[:3].upper() or 'CITY'}{idx:03d}",
+            "hospital_name": f"{city_name} {name}",
+            "city": city_name,
+            "specialties": specialties,
+            "rating": rating,
+            "distance_km": round(distance, 1),
+            "wait_time_mins": wait,
+            "congestion_level": congestion,
+            "emergency_ready": emergency_ready,
+            "traffic_delay_mins": delay,
+            "patient_capacity": capacity,
+            "hospital_lat": round(lat + (idx * 0.01), 6),
+            "hospital_lng": round(lng + (idx * 0.01), 6),
+        })
+    return hospitals
+
+
+def _collect_catalog_hospitals() -> List[Dict]:
+    hospitals: List[Dict] = []
+    for file_path in _list_city_files():
+        data = _load_json_file(file_path)
+        if data:
+            hospitals.extend(data)
+    return hospitals
+
 
 def _load_json_file(path: str) -> Optional[List[Dict]]:
     if not os.path.exists(path):
@@ -109,64 +181,37 @@ def _load_json_file(path: str) -> Optional[List[Dict]]:
 
 
 def load_city_hospitals(city: str) -> List[Dict]:
-    city_key = city.strip().lower()
+    city_key = _normalize_city(city)
     path = os.path.join(DATA_DIR, f"hospitals_{city_key}.json")
     hospitals = _load_json_file(path)
     if hospitals:
         return hospitals
-    if city_key == "lahore":
-        return [
-            {
-                "hospital_id": "LHE001",
-                "hospital_name": "Lahore Emergency Hospital",
-                "city": "Lahore",
-                "specialties": ["Emergency", "Cardiology"],
-                "rating": 4.7,
-                "distance_km": 2.7,
-                "wait_time_mins": 18,
-                "congestion_level": "HIGH",
-                "emergency_ready": True,
-                "traffic_delay_mins": 14,
-                "patient_capacity": "High",
-                "hospital_lat": 31.5497,
-                "hospital_lng": 74.3436,
-            },
-            {
-                "hospital_id": "LHE002",
-                "hospital_name": "Nishtar Medical Center",
-                "city": "Lahore",
-                "specialties": ["General", "Pediatrics"],
-                "rating": 4.4,
-                "distance_km": 4.1,
-                "wait_time_mins": 22,
-                "congestion_level": "MEDIUM",
-                "emergency_ready": True,
-                "traffic_delay_mins": 12,
-                "patient_capacity": "Medium",
-                "hospital_lat": 31.5497,
-                "hospital_lng": 74.2633,
-            },
-            {
-                "hospital_id": "LHE003",
-                "hospital_name": "Gulberg Care Hospital",
-                "city": "Lahore",
-                "specialties": ["Outpatient", "Diagnostics"],
-                "rating": 4.3,
-                "distance_km": 5.9,
-                "wait_time_mins": 16,
-                "congestion_level": "LOW",
-                "emergency_ready": False,
-                "traffic_delay_mins": 9,
-                "patient_capacity": "Low",
-                "hospital_lat": 31.5308,
-                "hospital_lng": 74.2164,
-            },
+    # Prefer a matching file, then a richer cross-city catalog, then a generated city-specific fallback.
+    catalog = _collect_catalog_hospitals()
+    if catalog:
+        matched = [
+            h for h in catalog
+            if _normalize_city(str(h.get("city", ""))) == city_key
         ]
-    return DEFAULT_HOSPITALS
+        if matched:
+            return matched
+
+        # If the city is known in the catalog but not backed by a dedicated file, return the full catalog.
+        if city_key in {
+            _normalize_city(str(h.get("city", "")))
+            for h in catalog
+            if h.get("city")
+        }:
+            return catalog
+
+    if city_key in {"karachi", "lahore", "islamabad", "rawalpindi", "faisalabad", "multan", "peshawar", "quetta", "hyderabad", "sialkot", "gujranwala"}:
+        return _generate_city_hospitals(city)
+
+    return _generate_city_hospitals(city)
 
 
 def get_hospital_by_id(hospital_id: str) -> Optional[Dict]:
-    all_hospitals = DEFAULT_HOSPITALS + load_city_hospitals("Lahore")
+    all_hospitals = DEFAULT_HOSPITALS + _collect_catalog_hospitals()
     for hospital in all_hospitals:
         if hospital.get("hospital_id") == hospital_id:
             return hospital
@@ -174,22 +219,25 @@ def get_hospital_by_id(hospital_id: str) -> Optional[Dict]:
 
 
 def get_hospital_analytics(city: str) -> List[Dict]:
-    city_key = city.strip().lower()
-    if city_key == "lahore":
-        return [
-            {
-                "hospital_name": "Lahore Emergency Hospital",
-                "peak_day": "Tuesday",
-                "peak_hours": "5 PM - 9 PM",
-                "most_busy_ward": "Emergency",
-                "emergency_load": "HIGH",
-            },
-            {
-                "hospital_name": "Nishtar Medical Center",
-                "peak_day": "Thursday",
-                "peak_hours": "3 PM - 7 PM",
-                "most_busy_ward": "Trauma",
-                "emergency_load": "MEDIUM",
-            },
-        ]
-    return DEFAULT_ANALYTICS
+    city_key = _normalize_city(city)
+    hospitals = load_city_hospitals(city)
+    if not hospitals:
+        return DEFAULT_ANALYTICS
+
+    analytics: List[Dict] = []
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    for index, hospital in enumerate(hospitals):
+        specialties = hospital.get("specialties") or ["General"]
+        peak_day = days[index % len(days)]
+        wait = int(hospital.get("wait_time_mins", 15))
+        peak_start = max(8, min(20, wait // 2 + 8))
+        peak_end = min(23, peak_start + 4)
+        analytics.append({
+            "hospital_name": hospital.get("hospital_name", f"{city.title()} Hospital"),
+            "peak_day": peak_day,
+            "peak_hours": f"{peak_start} PM - {peak_end} PM",
+            "most_busy_ward": specialties[0],
+            "emergency_load": hospital.get("congestion_level", "LOW"),
+        })
+
+    return analytics

@@ -18,6 +18,7 @@ class HealthcareFlowState {
     this.booking,
     this.analytics = const [],
     this.trace,
+    this.currentCity,
     this.isAnalyzing = false,
     this.isBooking = false,
     this.isLoadingAnalytics = false,
@@ -28,6 +29,7 @@ class HealthcareFlowState {
   final BookingResponse? booking;
   final List<AnalyticsResponse> analytics;
   final Map<String, dynamic>? trace;
+  final String? currentCity;
   final bool isAnalyzing;
   final bool isBooking;
   final bool isLoadingAnalytics;
@@ -38,6 +40,7 @@ class HealthcareFlowState {
     BookingResponse? booking,
     List<AnalyticsResponse>? analytics,
     Map<String, dynamic>? trace,
+    String? currentCity,
     bool? isAnalyzing,
     bool? isBooking,
     bool? isLoadingAnalytics,
@@ -49,6 +52,7 @@ class HealthcareFlowState {
       booking: booking ?? this.booking,
       analytics: analytics ?? this.analytics,
       trace: trace ?? this.trace,
+      currentCity: currentCity ?? this.currentCity,
       isAnalyzing: isAnalyzing ?? this.isAnalyzing,
       isBooking: isBooking ?? this.isBooking,
       isLoadingAnalytics: isLoadingAnalytics ?? this.isLoadingAnalytics,
@@ -88,6 +92,7 @@ class HealthcareFlowController extends StateNotifier<HealthcareFlowState> {
       state = state.copyWith(
         analysis: analysis,
         trace: trace,
+        currentCity: analysis.location ?? location,
         isAnalyzing: false,
         clearError: true,
       );
@@ -141,11 +146,18 @@ class HealthcareFlowController extends StateNotifier<HealthcareFlowState> {
     }
   }
 
-  Future<void> loadAnalytics({String city = AppConfig.defaultCity}) async {
+  Future<void> loadAnalytics({String? city}) async {
+    final resolvedCity = (city ?? state.currentCity ?? AppConfig.defaultCity).trim().isEmpty
+        ? AppConfig.defaultCity
+        : (city ?? state.currentCity ?? AppConfig.defaultCity).trim();
     state = state.copyWith(isLoadingAnalytics: true, clearError: true);
     try {
-      final analytics = await _repository.hospitalAnalytics(city: city);
-      state = state.copyWith(analytics: analytics, isLoadingAnalytics: false);
+      final analytics = await _repository.hospitalAnalytics(city: resolvedCity);
+      state = state.copyWith(
+        analytics: analytics,
+        currentCity: resolvedCity,
+        isLoadingAnalytics: false,
+      );
     } catch (error) {
       state = state.copyWith(
         isLoadingAnalytics: false,

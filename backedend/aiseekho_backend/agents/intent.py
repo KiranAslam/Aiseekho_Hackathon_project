@@ -18,6 +18,27 @@ SYMPTOM_KEYWORDS = [
 
 LOCATION_KEYWORDS = ["g-13", "karachi", "lahore", "clifton", "nazimabad", "gulshan", "dha"]
 TIME_PHRASES = ["tomorrow morning", "kal subah", "today", "aaj", "subah", "evening", "tonight", "now"]
+INVALID_TEXT_VALUES = {"", "none", "null", "unknown", "n/a", "not specified", "unspecified"}
+
+
+def _text_value(value, fallback: str) -> str:
+    if value is None:
+        return fallback
+    if isinstance(value, str):
+        cleaned = value.strip()
+        return fallback if cleaned.lower() in INVALID_TEXT_VALUES else (cleaned or fallback)
+    if isinstance(value, (list, tuple)):
+        for item in value:
+            text = _text_value(item, "")
+            if text:
+                return text
+        return fallback
+    if isinstance(value, dict):
+        for key in ("value", "text", "name", "label"):
+            if key in value:
+                return _text_value(value[key], fallback)
+        return fallback
+    return str(value).strip() or fallback
 
 
 def _extract_symptom(text: str) -> str:
@@ -57,14 +78,34 @@ def run(message: str, location: str, preferred_time: Optional[str] = None) -> di
         try:
             resp = analyze_with_gemini(prompt)
             parsed = json.loads(resp)
+            symptom = _text_value(parsed.get("symptom"), _extract_symptom(message))
+            heuristic_urgency = classify_urgency(message)
+            parsed_urgency = _text_value(parsed.get("urgency"), heuristic_urgency).upper()
+            urgency = heuristic_urgency if heuristic_urgency == "HIGH" else parsed_urgency
+            request_type = _text_value(
+                parsed.get("request_type"),
+                "Emergency" if urgency == "HIGH" else "Urgent" if urgency == "MEDIUM" else "Routine",
+            )
+            if urgency == "HIGH":
+                request_type = "Emergency"
+            requested_time = _text_value(
+                parsed.get("requested_time"),
+                _extract_requested_time(message, preferred_time),
+            )
+            resolved_location = _text_value(
+                parsed.get("location"),
+                _extract_location(message, location),
+            )
+            if resolved_location.strip().lower() in INVALID_TEXT_VALUES:
+                resolved_location = _extract_location(message, location)
             return {
                 "agent": "IntentUnderstandingAgent",
-                "language": parsed.get("language", detect_language(message)),
-                "symptom": parsed.get("symptom", _extract_symptom(message)),
-                "urgency": parsed.get("urgency", classify_urgency(message)),
-                "request_type": parsed.get("request_type", "Emergency" if classify_urgency(message) == "HIGH" else "Urgent"),
-                "requested_time": parsed.get("requested_time", _extract_requested_time(message, preferred_time)),
-                "location": parsed.get("location", _extract_location(message, location)),
+                "language": _text_value(parsed.get("language"), detect_language(message)),
+                "symptom": symptom,
+                "urgency": urgency,
+                "request_type": request_type,
+                "requested_time": requested_time,
+                "location": resolved_location,
                 "message": message,
             }
         except Exception:

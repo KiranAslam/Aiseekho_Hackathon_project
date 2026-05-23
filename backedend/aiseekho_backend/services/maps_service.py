@@ -32,9 +32,9 @@ def _haversine_km(lat1, lon1, lat2, lon2):
 def _client():
     if googlemaps is None:
         raise RuntimeError("googlemaps library not available; install googlemaps package")
-    key = settings.GOOGLE_MAPS_API_KEY
+    key = settings.GOOGLE_MAPS_SERVER_KEY or settings.GOOGLE_MAPS_API_KEY or settings.GOOGLE_MAPS_ANDROID_KEY
     if not key:
-        raise RuntimeError("GOOGLE_MAPS_API_KEY not configured in settings or .env")
+        raise RuntimeError("GOOGLE_MAPS_SERVER_KEY / GOOGLE_MAPS_API_KEY not configured in settings or .env")
     return googlemaps.Client(key=key)
 
 

@@ -3,6 +3,7 @@ Simple in-memory booking store for mock persistence during the prototype.
 This keeps state within the running process and is not durable.
 """
 from datetime import datetime
+from datetime import timezone
 from typing import List, Dict, Optional
 
 BOOKINGS: List[Dict] = []
@@ -36,7 +37,7 @@ def update_booking_status(booking_id: str, status: str, note: str = "") -> Optio
             if note:
                 b.setdefault("notes", "")
                 b["notes"] = note
-            b["updated_at"] = datetime.utcnow().isoformat() + "Z"
+            b["updated_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             return b
     return None
 

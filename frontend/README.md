@@ -33,6 +33,19 @@ or:
 flutter build apk --release -PGOOGLE_MAPS_API_KEY=your_google_maps_key
 ```
 
+For a production release APK, also provide a real signing config in
+`android/key.properties` and make sure the Google Maps API key is allowed for
+the release package name and SHA-1 certificate fingerprint.
+
+Example `android/key.properties`:
+
+```properties
+storeFile=../app/upload-keystore.jks
+storePassword=your_store_password
+keyAlias=upload
+keyPassword=your_key_password
+```
+
 ## Build
 
 ```bash

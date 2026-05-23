@@ -29,7 +29,9 @@ def _compute_priority_score(hospital: dict, urgency: str) -> int:
 def run(intent_output: dict, city: str) -> dict:
     # In live mode, prefer Google Maps Places results when available
     raw_hospitals = []
-    if settings.APP_MODE == "live" and find_nearby_hospitals_by_address and settings.GOOGLE_MAPS_API_KEY:
+    if settings.APP_MODE == "live" and find_nearby_hospitals_by_address and (
+        settings.GOOGLE_MAPS_SERVER_KEY or settings.GOOGLE_MAPS_API_KEY or settings.GOOGLE_MAPS_ANDROID_KEY
+    ):
         try:
             raw_hospitals = find_nearby_hospitals_by_address(intent_output.get("location", city))
         except Exception:

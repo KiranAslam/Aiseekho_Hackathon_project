@@ -13,17 +13,31 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 }
 
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
+  final _cityController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(healthcareFlowProvider.notifier).loadAnalytics(),
-    );
+    Future.microtask(() {
+      final state = ref.read(healthcareFlowProvider);
+      final city = state.currentCity ?? 'Karachi';
+      _cityController.text = city;
+      ref.read(healthcareFlowProvider.notifier).loadAnalytics(city: city);
+    });
+  }
+
+  @override
+  void dispose() {
+    _cityController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(healthcareFlowProvider);
+    final activeCity = state.currentCity?.trim().isNotEmpty == true
+        ? state.currentCity!.trim()
+        : (_cityController.text.trim().isEmpty ? 'Karachi' : _cityController.text.trim());
     return AppScaffold(
       title: 'Hospital Intelligence',
       showBack: true,
@@ -35,7 +49,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Karachi operational view',
+                  '$activeCity operational view',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -43,6 +57,27 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 const SizedBox(height: 8),
                 const Text(
                   'Congestion, peak-hour detection, emergency load, and patient inflow signals from FastAPI analytics.',
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _cityController,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    labelText: 'City for analytics',
+                    prefixIcon: const Icon(Icons.location_city_rounded),
+                    suffixIcon: IconButton(
+                      tooltip: 'Load city intelligence',
+                      onPressed: () {
+                        final city = _cityController.text.trim().isEmpty
+                            ? 'Karachi'
+                            : _cityController.text.trim();
+                        ref
+                            .read(healthcareFlowProvider.notifier)
+                            .loadAnalytics(city: city);
+                      },
+                      icon: const Icon(Icons.search_rounded),
+                    ),
+                  ),
                 ),
               ],
             ),

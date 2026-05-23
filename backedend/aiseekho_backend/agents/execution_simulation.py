@@ -1,5 +1,5 @@
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from services import mock_store
 
 
@@ -37,7 +37,7 @@ def run(hospital: dict, urgency: str, requested_time: str, symptom: str) -> dict
         "requested_time": requested_time,
         "urgency": urgency,
         "message": confirmation_message,
-        "created_at": datetime.utcnow().isoformat() + "Z",
+        "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     }
 
     # persist in mock store for later retrieval
