@@ -37,6 +37,16 @@ For a production release APK, also provide a real signing config in
 `android/key.properties` and make sure the Google Maps API key is allowed for
 the release package name and SHA-1 certificate fingerprint.
 
+If you build in GitHub Actions, add these secrets as well:
+
+```text
+GOOGLE_MAPS_ANDROID_KEY or GOOGLE_MAPS_API_KEY
+ANDROID_KEYSTORE_BASE64
+ANDROID_KEYSTORE_PASSWORD
+ANDROID_KEY_ALIAS
+ANDROID_KEY_PASSWORD
+```
+
 Example `android/key.properties`:
 
 ```properties

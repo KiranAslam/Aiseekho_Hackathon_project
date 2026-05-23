@@ -45,6 +45,13 @@ jobs:
         working-directory: frontend
         run: flutter pub get
 
+      - name: Verify Maps key is present
+        run: |
+          if [ -z "$GOOGLE_MAPS_ANDROID_KEY" ]; then
+            echo "Missing Google Maps API key. Set GOOGLE_MAPS_ANDROID_KEY in GitHub secrets."
+            exit 1
+          fi
+
       - name: Flutter doctor (diagnostics)
         working-directory: frontend
         run: flutter doctor -v || true
